@@ -2,7 +2,7 @@
 
 ## Overview
 
-***balche*** is a graphical interface for a cryptocurrency wallet checker that retrieves balances across EVM chains, Solana, and Tron networks. It supports native tokens as well as common ERC20, SPL, and TRC20 tokens.  
+***balche*** is a graphical interface for a cryptocurrency multi wallet checker that retrieves balances across EVM chains, Solana, and Tron networks. It supports native tokens as well as common ERC20, SPL, and TRC20 tokens.  
 
 ## Requirements
 
@@ -64,6 +64,4 @@ python utils/cli.py
 
 CLI version supports the same functionality as the GUI.
 
-## Author
-
-[@FISCALEIO](https://t.me/fiscaleio)
+## AUTHOR [@FISCALEIO](https://t.me/fiscaleio)
