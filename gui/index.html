@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BALCHE</title>
+  <link rel="stylesheet" href="assets/bootstrap.min.css" />
+  <script src="assets/jquery.js"></script>
+  <style>
+    :root {
+        --bg-main: #0b0b0b;
+        --bg-card: #161616;
+        --bg-input: #0f0f0f;
+        --border-color: #2a2a2a;
+        --text-dim: #7a7a7a;
+        --accent: #0c35d7;
+        --positive: #4caf50;
+        --negative: #f44336;
+        --warning: #ffb300;
+        --mono: "Fira Code", Menlo, Consolas, monospace;
+        --scroll-track: #0f0f0f;    
+        --scroll-thumb: #2e2e2e;    
+        --scroll-thumb-hover: #3a3a3a;
+    }
+    body {
+        background-color: var(--bg-main);
+        color: #f2f2f2;
+        font-family: var(--mono);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        scrollbar-width: thin;
+        scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+    }
+    header.navbar {
+        background-color: #000;
+        border-bottom: 1px solid var(--border-color);
+        padding: 0.8rem 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .brand-block { display:flex; align-items:baseline; gap:0.75rem; }
+    .brand-name { color:var(--accent); font-size:1.2rem; font-weight:600; line-height:1.2; display:flex; align-items:center; gap:0.5rem; }
+    .version-pill { font-size:0.7rem; background:rgba(33,150,243,0.12); color:var(--accent); border:1px solid var(--accent); border-radius:4px; padding:2px 6px; }
+    .header-actions { display:flex; gap:0.75rem; }
+    .btn-main { background:var(--accent); border:0; color:#fff; font-size:0.8rem; font-weight:600; line-height:1.2rem; border-radius:6px; padding:0.5rem 0.9rem; cursor:pointer; }
+    .btn-main:hover { filter:brightness(1.15); }
+    main { flex:1; width:100%; max-width:1400px; margin:2rem auto; padding:0 1rem 4rem; display:flex; flex-direction:column; gap:2rem; scrollbar-width:thin; scrollbar-color:var(--scroll-thumb) var(--scroll-track); }
+    .panel-input { background-color:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; padding:1.5rem; width:100%; }
+    .panel-headline { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; row-gap:0.5rem; }
+    .panel-title { font-size:0.9rem; font-weight:600; color:#fff; display:flex; align-items:center; gap:0.5rem; }
+    .panel-subtext { font-size:0.7rem; color:var(--text-dim); line-height:1.2; }
+    .upload-area { display:flex; align-items:center; justify-content:center; }
+    .file-upload-icon { font-size:1rem; font-weight:bold; color:var(--text-dim,#ccc); cursor:pointer; display:flex; align-items:center; justify-content:center; width:20px; height:20px; border:2px dashed var(--text-dim,#ccc); border-radius:8px; transition:all 0.2s ease-in-out; }
+    .file-upload-icon:hover { color:#fff; border-color:#fff; box-shadow:0 0 10px rgba(255,255,255,0.3); }
+    #file-input { display:none; }
+    textarea#addresses-input { width:100%; min-height:110px; background:var(--bg-input); color:#f2f2f2; border:1px solid var(--border-color); border-radius:8px; padding:0.75rem 0.9rem; font-size:0.8rem; line-height:1.3rem; resize:vertical; outline:none; scrollbar-width:thin; scrollbar-color:var(--scroll-thumb) var(--scroll-track); }
+    textarea#addresses-input:focus { border-color:var(--accent); box-shadow:0 0 8px rgba(33,150,243,0.4); }
+    .run-row { display:flex; justify-content:flex-end; margin-top:1rem; }
+    .results-grid { width:100%; display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap:1rem; }
+    .wallet-card { background-color:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; padding:1rem 1rem 0.75rem; display:flex; flex-direction:column; min-width:0; box-shadow:0 8px 24px rgba(0,0,0,0.6); transition:border 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease; }
+    .wallet-card.active { border-color:var(--positive); box-shadow:0 12px 32px rgba(76,175,80,0.15); }
+    .wallet-card.inactive { border-color:var(--border-color); opacity:0.9; }
+    .wallet-card.error { border-color:var(--warning); box-shadow:0 12px 32px rgba(255,179,0,0.12); }
+    .wallet-card:hover { transform:translateY(-2px) scale(1.01); }
+    .wallet-topline { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; row-gap:0.5rem; margin-bottom:0.75rem; }
+    .wallet-addr-block { max-width:80%; }
+    .wallet-address { font-size:0.8rem; color:#00bcd4; word-break:break-all; line-height:1.2rem; }
+    .addr-type-row { display:flex; margin-top:0.4rem; gap:0.4rem; flex-wrap:wrap; }
+    .badge-type { font-size:0.65rem; font-weight:600; padding:2px 6px; border-radius:4px; line-height:1rem; background:rgba(156,39,176,0.12); color:#ce93d8; border:1px solid #9c27b0; }
+    .badge-status { font-size:0.65rem; font-weight:600; padding:2px 6px; border-radius:4px; line-height:1rem; border:1px solid; }
+    .badge-status.positive { border-color:var(--positive); color:var(--positive); background:rgba(76,175,80,0.08); }
+    .badge-status.negative { border-color:var(--negative); color:var(--negative); background:rgba(244,67,54,0.08); }
+    .badge-status.partial { border-color:var(--warning); color:var(--warning); background:rgba(255,179,0,0.08); }
+    .balance-section { width:100%; background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:8px; padding:0.75rem; font-size:0.75rem; line-height:1.2rem; color:#f2f2f2; }
+    .chain-row { display:flex; flex-wrap:wrap; justify-content:space-between; border-bottom:1px solid #1f1f1f; padding-bottom:0.5rem; margin-bottom:0.5rem; }
+    .chain-row:last-of-type { border-bottom:0; margin-bottom:0; padding-bottom:0; }
+    .chain-left { font-weight:600; color:#ce93d8; display:flex; flex-direction:column; }
+    .chain-name { font-size:0.8rem; }
+    .native-balance { font-size:0.75rem; color:#fff; }
+    .chain-right { text-align:right; }
+    .rpc-status { font-size:0.7rem; }
+    .rpc-status.success { color:var(--positive); }
+    .rpc-status.error { color:var(--negative); }
+    .token-list { margin-top:0.5rem; padding-left:0.75rem; border-left:2px solid #2e2e2e; }
+    .token-row { display:flex; justify-content:space-between; font-size:0.7rem; line-height:1.1rem; color:#ccc; }
+    .token-symbol { color:var(--accent); font-weight:500; }
+    footer { border-top:1px solid var(--border-color); background-color:#000; font-size:0.75rem; color:var(--text-dim); text-align:center; padding:1rem; }
+    footer span.creator { color:#f2f2f2; }
+    @media (max-width:480px) { .wallet-address { font-size:0.7rem; word-break:break-word; } }
+    ::-webkit-scrollbar { width:8px; height:8px; background-color:transparent; }
+    ::-webkit-scrollbar-track { background-color:var(--scroll-track); border-radius:999px; border:1px solid #1a1a1a; }
+    ::-webkit-scrollbar-thumb { background-color:var(--scroll-thumb); border-radius:999px; border:1px solid #1a1a1a; box-shadow:0 0 10px rgba(0,0,0,0.8); }
+    ::-webkit-scrollbar-thumb:hover { background-color:var(--scroll-thumb-hover); }.copy-btn {width: 16px;height: 16px;cursor: pointer;display: inline-block;vertical-align: middle;transition: transform 0.12s ease, opacity 0.12s ease;}.copy-btn:hover,.copy-btn:focus {transform: scale(1.12);opacity: 0.9;outline: none;}
+  </style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="brand-block">
+    <div class="brand-name"><span>BALCHE</span></div>
+    <div class="version-pill">v1.0</div>
+  </div>
+  <div class="header-actions">
+    <a href="https://github.com/fiscaleio/balche" target="_blank" class="source">
+      <!-- GitHub SVG -->
+      <svg viewBox="0 0 98 96" width="30" height="30" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z" fill="#fff"/>
+      </svg>
+    </a>
+  </div>
+</header>
+
+<main>
+  <section class="panel-input">
+    <div class="panel-headline">
+      <div>
+        <div class="panel-title"><span>Wallet Addresses</span></div>
+        <div class="panel-subtext">paste one per line, or upload a file.</div>
+      </div>
+      <div class="upload-area">
+        <label for="file-input" class="file-upload-icon">+
+          <input type="file" id="file-input" accept=".txt,.csv" />
+        </label>
+      </div>
+    </div>
+
+    <textarea id="addresses-input" placeholder=""></textarea>
+
+    <div class="run-row">
+      <button class="btn-main" id="run-check">check</button>
+    </div>
+  </section>
+
+  <section>
+    <div class="panel-title" style="margin-bottom:0.5rem;">
+      <span>Results</span>
+      <span class="panel-subtext" style="margin-left:0.5rem;" id="result-count">0 wallets</span>
+    </div>
+
+    <div class="results-grid" id="results-grid"></div>
+  </section>
+</main>
+
+<footer>
+  <div>created by <span class="creator">@fiscaleio</span></div>
+</footer>
+
+<script>
+let APP_TOKEN = null;
+
+async function ensureToken() {
+  if (APP_TOKEN) return APP_TOKEN;
+  try {
+    const resp = await fetch('/_token');
+    if (!resp.ok) {
+      console.warn('Failed to fetch token', resp.status);
+      return null;
+    }
+    const j = await resp.json();
+    APP_TOKEN = j && j.token ? j.token : null;
+    return APP_TOKEN;
+  } catch (e) {
+    console.warn('Error fetching token', e);
+    return null;
+  }
+}
+
+// explorer link generator
+function explorerLinkFor(address, type) {
+  if (type === "SOL") return `https://solscan.io/account/${address}`;
+  if (type === "TRX") return `https://tronscan.io/#/address/${address}`;
+  return `https://blockscan.com/address/${address}`; // default for EVM
+}
+
+function setRunning(running) {
+  $('#run-check').prop('disabled', running);
+  $('#run-check').text(running ? 'checking...' : 'check');
+}
+
+// render helpers (only non-zero rows/tokens)
+function buildTokenRows(tokensForChain) {
+  if (!tokensForChain) return "";
+  let rows = "";
+  for (const [symbol, tokinfo] of Object.entries(tokensForChain)) {
+    const bal = Number(tokinfo.balance || 0);
+    if (!bal) continue;
+    rows += `
+      <div class="token-row">
+        <div class="token-symbol">${symbol}</div>
+        <div class="token-balance">${bal.toLocaleString(undefined,{maximumFractionDigits:8})}</div>
+      </div>
+    `;
+  }
+  if (!rows) return "";
+  return `<div class="token-list">${rows}</div>`;
+}
+
+function statusClassFromStatus(statusText) {
+  if (!statusText) return "rpc-status error";
+  const lower = (statusText + "").toLowerCase();
+  if (lower.startsWith("success")) return "rpc-status success";
+  return "rpc-status error";
+}
+
+function buildChainBlock(chainName, chainInfo, tokenInfoForChain) {
+  const nativeBal = Number(chainInfo.balance || 0);
+  const tokenHtml = buildTokenRows(tokenInfoForChain);
+  if (!nativeBal && !tokenHtml) return "";
+  return `
+    <div class="chain-row">
+      <div class="chain-left">
+        <div class="chain-name">${chainName}</div>
+        <div class="native-balance">${nativeBal.toLocaleString(undefined,{maximumFractionDigits:8})}</div>
+      </div>
+      <div class="chain-right">
+        <div class="${statusClassFromStatus(chainInfo.status)}">${chainInfo.status}</div>
+        ${tokenHtml}
+      </div>
+    </div>
+  `;
+}
+
+function renderWalletCard(wallet) {
+  let chainsHTML = "";
+  if (wallet.type === "EVM") {
+    for (const [chainName, chainInfo] of Object.entries(wallet.balances || {})) {
+      const tokenInfoForChain = wallet.token_balances ? wallet.token_balances[chainName] : null;
+      chainsHTML += buildChainBlock(chainName, chainInfo, tokenInfoForChain);
+    }
+  } else if (wallet.type === "TRX") {
+    for (const [sym, info] of Object.entries(wallet.balances || {})) {
+      chainsHTML += buildChainBlock(sym, info, null);
+    }
+  } else if (wallet.type === "SOL") {
+    // <-- changed: include SPL token balances under token_balances["SOL"]
+    const tokenInfoForSol = wallet.token_balances ? wallet.token_balances["SOL"] : null;
+    chainsHTML += buildChainBlock(
+      "SOL",
+      { balance: wallet.balance || 0, status: wallet.status || "unknown" },
+      tokenInfoForSol
+    );
+  }
+
+  if (!chainsHTML) return ""; // nothing to show (shouldn't happen for positive wallets)
+
+  const explorerHref = explorerLinkFor(wallet.address, wallet.type);
+  const positiveClass = wallet._positive ? "positive" : "negative";
+
+  return `
+    <div class="wallet-card ${wallet._positive ? "active" : "inactive"}">
+      <div class="wallet-topline">
+        <div class="wallet-addr-block">
+          <div class="wallet-address">
+            <a href="${explorerHref}" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+              ${wallet.address}
+              <svg class="copy-btn"
+                   xmlns="http://www.w3.org/2000/svg"
+                   viewBox="0 0 460 460"
+                   fill="currentColor"
+                   role="button"
+                   aria-label="Copy address"
+                   tabindex="0"
+                   data-address="${wallet.address}">
+                <g><g><g>
+                  <path d="M425.934,0H171.662c-18.122,0-32.864,14.743-32.864,32.864v77.134h30V32.864c0-1.579,1.285-2.864,2.864-2.864h254.272
+                    c1.579,0,2.864,1.285,2.864,2.864v254.272c0,1.58-1.285,2.865-2.864,2.865h-74.729v30h74.729
+                    c18.121,0,32.864-14.743,32.864-32.865V32.864C458.797,14.743,444.055,0,425.934,0z"/>
+                  <path d="M288.339,139.998H34.068c-18.122,0-32.865,14.743-32.865,32.865v254.272C1.204,445.257,15.946,460,34.068,460h254.272
+                    c18.122,0,32.865-14.743,32.865-32.864V172.863C321.206,154.741,306.461,139.998,288.339,139.998z M288.341,430H34.068
+                    c-1.58,0-2.865-1.285-2.865-2.864V172.863c0-1.58,1.285-2.865,2.865-2.865h254.272c1.58,0,2.865,1.285,2.865,2.865v254.273h0.001
+                    C291.206,428.715,289.92,430,288.341,430z"/>
+                </g></g></g>
+              </svg>
+            </a>
+          </div>
+          <div class="addr-type-row">
+            <span class="badge-type">${wallet.type}</span>
+            <span class="badge-status ${positiveClass}">${wallet._positive ? "active" : "empty"}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="balance-section">
+        ${chainsHTML}
+      </div>
+    </div>
+  `;
+}
+
+// poller: repeatedly GET /jobs/<job_id>/poll?since=<n> to receive incremental results
+function pollForJob(jobId, lastIndexRef, pollInterval, onNewResults, onDone, onStats) {
+  const poller = setInterval(() => {
+    $.ajax({
+      url: `/jobs/${jobId}/poll?since=${lastIndexRef.index}`,
+      method: "GET",
+      headers: { "X-APP-TOKEN": APP_TOKEN },
+      success: function(resp) {
+        if (!resp) return;
+        const newResults = resp.new_results || [];
+        const stats = resp.stats || {};
+        const done = !!resp.done;
+        if (typeof onStats === "function") onStats(stats);
+        if (Array.isArray(newResults) && newResults.length) {
+          newResults.forEach(w => {
+            if (!w) return;
+            const html = renderWalletCard(w);
+            if (html) $('#results-grid').append(html);
+            lastIndexRef.index += 1;
+          });
+          if (typeof onNewResults === "function") onNewResults(newResults);
+        }
+        if (done) {
+          clearInterval(poller);
+          if (typeof onDone === "function") onDone(stats);
+        }
+      },
+      error: function(xhr) {
+        console.error("poll error", xhr);
+        if (xhr.status === 401) {
+          clearInterval(poller);
+          setRunning(false);
+          alert("Authentication error (invalid token).");
+        }
+      }
+    });
+  }, pollInterval);
+  return poller;
+}
+
+// file input -> append file contents to textarea
+$('#file-input').on('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const current = $('#addresses-input').val().trim();
+    const extra = evt.target.result.trim();
+    $('#addresses-input').val((current ? current + "\n" : "") + extra);
+  };
+  reader.readAsText(file);
+});
+
+// run-check click handler (async to await ensureToken)
+$('#run-check').on('click', async function() {
+  const raw = $('#addresses-input').val().trim();
+  if (!raw) return alert("Please paste at least one address.");
+
+  const addrs = raw.split(/[\r\n,]+/).map(s => s.trim()).filter(Boolean);
+  if (!addrs.length) return alert("No addresses found.");
+
+  setRunning(true);
+  $('#results-grid').empty();
+  $('#result-count').text(`checking... 0/${addrs.length}`);
+
+  const tok = await ensureToken();
+  if (!tok) {
+    setRunning(false);
+    return alert("Unable to obtain runtime token from server.");
+  }
+
+  $.ajax({
+    url: "/check",
+    method: "POST",
+    contentType: "application/json",
+    headers: { "X-APP-TOKEN": APP_TOKEN },
+    data: JSON.stringify({ addresses: addrs, include_empty: false }),
+    success: function(resp) {
+      if (!resp || !resp.job_id) {
+        alert("Failed to start job");
+        setRunning(false);
+        return;
+      }
+      const jobId = resp.job_id;
+      const total = resp.total || addrs.length;
+      const lastIndexRef = { index: 0 };
+      const pollIntervalMs = 700;
+
+      $('#result-count').text(`checking... 0/${total}`);
+
+      pollForJob(
+        jobId,
+        lastIndexRef,
+        pollIntervalMs,
+        function onNew(newResults) {
+          $('#result-count').text(`checking... ${lastIndexRef.index}/${total}`);
+        },
+        function onDone(finalStats) {
+          const shown = lastIndexRef.index;
+          $('#result-count').text(`${shown} wallet(s) shown — checked ${finalStats.checked || 0}, valid ${finalStats.valid || 0}`);
+          setRunning(false);
+          if (finalStats.errors_count) {
+            $('#results-grid').prepend(`<div style="color:#ffb300; padding:0.5rem; border-radius:8px; margin-bottom:0.5rem;">
+              ${finalStats.errors_count} check error(s). See server log for details.
+            </div>`);
+          }
+        },
+        function onStats(stats) {
+          $('#result-count').text(`checking... ${stats.checked || 0}/${stats.total || addrs.length}`);
+        }
+      );
+    },
+    error: function(xhr) {
+      let msg = xhr.responseText || xhr.statusText || 'unknown error';
+      alert("Check failed: " + msg);
+      setRunning(false);
+    }
+  });
+});
+$('#results-grid').on('click', '.copy-btn', function (e) {
+  e.preventDefault(); e.stopPropagation();
+  const t = $(this).data('address'); if (!t) return;
+  const ta = $('<textarea>').val(t).css({position:'fixed',left:'-9999px'}).appendTo('body')[0];
+  ta.select(); document.execCommand('copy'); $(ta).remove();
+  if (!window.pywebview && navigator.clipboard?.writeText) navigator.clipboard.writeText(t).catch(()=>{});
+});
+
+$('#results-grid').on('keydown', '.copy-btn', e => {
+  if (e.key === 'Enter' || e.key === ' ') e.preventDefault(), $(e.currentTarget).click();
+});
+
+
+ensureToken().catch(() => {});
+</script>
+
+
+</body>
+</html>
